@@ -38,16 +38,22 @@ void createGraph(int eCnt, int vCnt, AdjVPtr * AdjList, AdjVPtr * tailList)
 //used to create the graph as AdjList
 {
     int vertex1, vertex2;
-    AdjVPtr newNode;
+    AdjVPtr newNode1, newNode2;
     for (int i = 0; i < eCnt; i ++)
     {
         scanf("%d %d", &vertex1, &vertex2);
-        newNode = (AdjVPtr)calloc(1, sizeof(AdjV));
-        newNode->Element = 0;
-        newNode->Next = NULL;
+        newNode1 = (AdjVPtr)calloc(1, sizeof(AdjV));
+        newNode1->Element = 0;
+        newNode1->Next = NULL;
+        newNode2 = (AdjVPtr)calloc(1, sizeof(AdjV));
+        newNode2->Element = 0;
+        newNode2->Next = NULL;
         tailList[vertex1]->Element = vertex2;
-        tailList[vertex1]->Next = newNode;
-        tailList[vertex1] = newNode;
+        tailList[vertex1]->Next = newNode1;
+        tailList[vertex1] = newNode1;
+        tailList[vertex2]->Element = vertex1;
+        tailList[vertex2]->Next = newNode2;
+        tailList[vertex2] = newNode2;
     }
 }
 
@@ -89,6 +95,16 @@ bool judgeCycle(int eCnt, int vCnt, AdjVPtr * AdjList, AdjVPtr * tailList)
             flag = false;
             break;
         }
+    }
+    vertex1 = inputTable[0];
+    vertex2 = inputTable[seqLen - 1];
+    if (vertex1 != vertex2)
+    {
+        flag = false;
+    }
+    if (seqLen != vCnt + 1)
+    {
+        flag = false;
     }
     for (int i = 0; i < seqLen; i ++)
     {
