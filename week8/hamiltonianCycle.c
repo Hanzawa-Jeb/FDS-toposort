@@ -86,11 +86,13 @@ bool judgeCycle(int eCnt, int vCnt, AdjVPtr * AdjList, AdjVPtr * tailList)
     {
         scanf("%d", inputTable + i);
     }
-    for (int i = 0; i < seqLen - 1; i ++)
+    for (int i = 0; i < seqLen; i ++)
     {
-        vertex1 = inputTable[i];
-        vertex2 = inputTable[i + 1];
-        if (!checkConnect(AdjList, vertex1, vertex2))
+        presTab[inputTable[i]] = true;
+    }
+    for (int i = 1; i < vCnt + 1; i ++)
+    {
+        if (!presTab[i])
         {
             flag = false;
             break;
@@ -106,13 +108,11 @@ bool judgeCycle(int eCnt, int vCnt, AdjVPtr * AdjList, AdjVPtr * tailList)
     {
         flag = false;
     }
-    for (int i = 0; i < seqLen; i ++)
+    for (int i = 0; i < seqLen - 1; i ++)
     {
-        presTab[inputTable[i]] = true;
-    }
-    for (int i = 1; i < vCnt + 1; i ++)
-    {
-        if (!presTab[i])
+        vertex1 = inputTable[i];
+        vertex2 = inputTable[i + 1];
+        if (!checkConnect(AdjList, vertex1, vertex2))
         {
             flag = false;
             break;
