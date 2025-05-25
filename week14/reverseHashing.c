@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void findSeq(int * hashTable, int n, int recDep, int * printTable, int printTableHead);
+void findSeq(int * hashTable, int n, int * printTable);
 void sortSeq(int * seq, int len);
 void printSeq(int * printSeq, int seqLen);
 
@@ -10,47 +10,85 @@ int countPositive(int * seq, int len);
 
 int main() {
     int n;
-    int posCnt;
-    scanf("%d", &n);    //get the number of the input
+    scanf("%d", &n);
     int * hashTable = (int *)calloc(n, sizeof(int));
     int * printTable = (int *)calloc(n, sizeof(int));
-    for (int i = 0; i < n; i ++) {
+    
+    for (int i = 0; i < n; i++) {
         scanf("%d", hashTable + i);
-        //get the input from the table
     }
-    posCnt = countPositive(hashTable, n);
-    findSeq(hashTable, n, 0, printTable, 0);
-    printSeq(printTable, posCnt);
+    
+    int posCnt = countPositive(hashTable, n);
+    findSeq(hashTable, n, printTable);
+    printSeq(printTable, posCnt); 
+    
     free(hashTable);
     free(printTable);
     return 0;
 }
 
-void findSeq(int * hashTable, int n, int recDep, int * printTable, int printTableHead) {
-    int expPos; //the expected position
-    int * tempSeq = (int *)calloc(n, sizeof(int));
-    int seqHead = 0;
-    bool flag = false;
-    for (int i = 0; i < n; i ++) {
-        expPos = hashTable[i] % n;
-        if ((i - expPos + n) % n == recDep && hashTable[i] >= 0) {
-            tempSeq[seqHead] = hashTable[i];
-            seqHead ++;
-            flag = true;
-            hashTable[i] = -1;
+void findSeq(int * hashTable, int n, int * printTable) {
+    bool * visited = (bool *)calloc(n, sizeof(bool));
+    int * restList = (int *)calloc(n, sizeof(int));
+    int restCount = 0;
+    int printCount = 0;
+    
+    // First find numbers that are in their ideal position
+    for (int i = 0; i < n; i++) {
+        if (hashTable[i] >= 0) {
+            if (hashTable[i] % n == i) {
+                printTable[printCount++] = hashTable[i];
+                visited[i] = true;
+            } else {
+                restList[restCount++] = hashTable[i];
+            }
         }
     }
-    sortSeq(tempSeq, seqHead);
-    for (int i = 0; i < seqHead; i ++) {
-        printTable[i + printTableHead] = tempSeq[i];
+    
+    // Process remaining numbers
+    while (printCount > 0) {
+        // Sort current output batch
+        sortSeq(printTable, printCount);
+        
+        // Get smallest number and mark its path
+        int current = printTable[0];
+        int startPos = current % n;
+        
+        // Mark path as visited
+        for (int i = startPos; i != hashTable[current]; i = (i + 1) % n) {
+            visited[i] = true;
+        }
+        
+        // Find next available numbers
+        for (int i = 0; i < restCount; i++) {
+            if (restList[i] != -1) {
+                int pos = restList[i] % n;
+                bool canAdd = true;
+                
+                // Check if path to final position is blocked
+                for (int j = pos; j != hashTable[restList[i]]; j = (j + 1) % n) {
+                    if (!visited[j]) {
+                        canAdd = false;
+                        break;
+                    }
+                }
+                
+                if (canAdd) {
+                    printTable[printCount++] = restList[i];
+                    restList[i] = -1;
+                }
+            }
+        }
+        
+        // Remove processed number
+        for (int i = 0; i < printCount - 1; i++) {
+            printTable[i] = printTable[i + 1];
+        }
+        printCount--;
     }
-    if (flag) {
-    findSeq(hashTable, n, recDep + 1, printTable, printTableHead + seqHead);
-    } else {
-        free(tempSeq);
-        return;
-    }
-    free(tempSeq);
+    
+    free(visited);
+    free(restList);
 }
 
 void sortSeq(int *seq, int len) {
