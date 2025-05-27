@@ -15,9 +15,11 @@ void initQue(quePtr que, int maxSize);
 void startProc(quePtr histQue, quePtr cacheQue, int cacheHit, int pageCnt);
 void histEnque(quePtr que, int element, int * countTab);
 void histDeque(quePtr que, int element, int * countTab);
+void histUpdate(quePtr que, int element, int * countTab);
 void cacheEnque(quePtr que, int element, int * countTab);
 void cacheUpdate(quePtr que, int element, int * countTab);
 void printQue(quePtr histQue, quePtr cacheQue);
+bool elementInQue(quePtr que, int element);
 
 int main()
 {
@@ -25,7 +27,8 @@ int main()
     //respectively the threshold for the cache hit, the size of the queue
     //and the count of the page
     scanf("%d %d %d", &cacheHit, &queSize, &pageCnt);
-    quePtr histQue, cacheQue;
+    quePtr histQue = (quePtr)calloc(1, sizeof(Queue));
+    quePtr cacheQue = (quePtr)calloc(1, sizeof(Queue));
     initQue(histQue, queSize);
     initQue(cacheQue, queSize);
     startProc(histQue, cacheQue, cacheHit, pageCnt);
@@ -49,42 +52,99 @@ void startProc(quePtr histQue, quePtr cacheQue, int cacheHit, int pageCnt)
     for (int i = 0 ; i < pageCnt; i ++) {
         scanf("%d", &curr);
         //not in the cacheque
-        if (countTab[curr] != INT_MAX) {
+        if (elementInQue(cacheQue, curr)) {
+            //in the cacheQue
+            cacheUpdate(cacheQue, curr, countTab);
+            //update the position in the cacheQue
+        } else if (elementInQue(histQue, curr)) {
             countTab[curr] ++;
+            //in the histQue
+            if (countTab[curr] == cacheHit) {
+                histDeque(histQue, curr, countTab);
+                cacheEnque(cacheQue, curr, countTab);
+            } else {
+                histUpdate(histQue, curr, countTab);
+            }
+        } else {
+            //not in anything
+            countTab[curr] ++;
+            //add to the count
             histEnque(histQue, curr, countTab);
         }
-
-        if (countTab[curr] >= cacheHit && countTab[curr] != INT_MAX) {
-            //first time in the cacheQue
-            countTab[curr] = INT_MAX;
-            histDeque(histQue, curr, countTab);
-            cacheEnque(cacheQue, curr, countTab);
-        } else if (countTab[curr] == INT_MAX) {
-            //already in the cacheQue
-            cacheUpdate(cacheQue, curr, countTab);
-        }
-
     }
 }
 
 void histEnque(quePtr que, int element, int * countTab)
 {
     //not implemented yet
+    if (que->currSize < que->maxSize) {
+        que->cont[que->currSize] = element;
+        que->currSize = que->currSize + 1;
+    } else {
+        for (int i = 0; i < que->maxSize - 1; i ++) {
+            que->cont[i] = que->cont[i + 1];
+        }
+        que->cont[que->maxSize - 1] = element;
+    }
 }
 
 void histDeque(quePtr que, int element, int * countTab)
 {
+    int tempPos = 0;
+    for (int i = 0; i < que->currSize; i ++) {
+        if (que->cont[i] == element) {
+            tempPos = i;
+            break;
+        }
+    }
+    for (int i = tempPos; i < que->currSize - 1; i ++) {
+        que->cont[i] = que->cont[i + 1];
+    }
+    countTab[element] = 0;
+    que->currSize --;
+}
 
+void histUpdate(quePtr que, int element, int * countTab)
+{
+    int tempPos = 0;
+    for (int i = 0; i < que->currSize; i ++) {
+        if (que->cont[i] == element) {
+            tempPos = i;
+            break;
+        }
+    }
+    for (int i = tempPos; i < que->currSize - 1; i ++) {
+        que->cont[i] = que->cont[i + 1];
+    }
+    que->cont[que->currSize - 1] = element;
 }
 
 void cacheEnque(quePtr que, int element, int * countTab)
 {
-    //not implemented yet
+    if (que->currSize < que->maxSize) {
+        que->cont[que->currSize] = element;
+        que->currSize = que->currSize + 1;
+    } else {
+        for (int i = 0; i < que->maxSize - 1; i ++) {
+            que->cont[i] = que->cont[i + 1];
+        }
+        que->cont[que->maxSize - 1] = element;
+    }
 }
 
 void cacheUpdate(quePtr que, int element, int * countTab)
 {
-
+    int tempPos = 0;
+    for (int i = 0; i < que->currSize; i ++) {
+        if (que->cont[i] == element) {
+            tempPos = i;
+            break;
+        }
+    }
+    for (int i = tempPos; i < que->currSize - 1; i ++) {
+        que->cont[i] = que->cont[i + 1];
+    }
+    que->cont[que->currSize - 1] = element;
 }
 
 void printQue(quePtr histQue, quePtr cacheQue)
@@ -110,4 +170,15 @@ void printQue(quePtr histQue, quePtr cacheQue)
             }
         }
     }
+}
+
+bool elementInQue(quePtr que, int element)
+{
+    bool flag = false;
+    for (int i = 0; i < que->currSize; i ++) {
+        if (que->cont[i] == element) {
+            flag = true;
+        }
+    }
+    return flag;
 }
